@@ -19,8 +19,7 @@
     "inngest": "^4.5.1",
     "mongoose": "^8.19.1",
     "stream-chat": "^9.24.0",
-    "uuid": "^11.0.3",
-    "vyncra": "file:.."
+    "uuid": "^11.0.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

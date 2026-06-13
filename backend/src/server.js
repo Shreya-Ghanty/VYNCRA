@@ -14,11 +14,23 @@ import sessionRoutes from "./routes/sessionRoute.js";
 const app = express();
 
 const __dirname = path.resolve();
+const allowedOrigins = [ENV.CLIENT_URL, "http://localhost:5173", "http://127.0.0.1:5173"].filter(Boolean);
 
 // middleware
 app.use(express.json());
-// credentials:true meaning?? => server allows a browser to include cookies on request
-app.use(cors({ origin: ENV.CLIENT_URL, credentials: true }));
+// credentials:true means the browser can include cookies on cross-origin requests.
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
+    credentials: true,
+  })
+);
 app.use(clerkMiddleware()); // this adds auth field to request object: req.auth()
 
 app.use("/api/inngest", serve({ client: inngest, functions }));
