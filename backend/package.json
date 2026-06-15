@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "src/server.js",
   "scripts": {
-    "dev": "nodemon src/server.js",
+    "dev": "nodemon --exec \"node --dns-result-order=ipv4first\" src/server.js",
     "start": "node src/server.js"
   },
   "type": "module",
@@ -19,7 +19,7 @@
     "inngest": "^4.5.1",
     "mongoose": "^8.19.1",
     "stream-chat": "^9.24.0",
-    "vyncra": "file:.."
+    "uuid": "^11.1.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

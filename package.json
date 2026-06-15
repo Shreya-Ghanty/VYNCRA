@@ -1,6 +1,7 @@
 {
-  "name": "talent-iq",
+  "name": "vyncra",
   "version": "1.0.0",
+  "description": "<h1 align=\"center\">✨ Full-Stack Interview Platform ✨</h1>",
   "main": "index.js",
   "scripts": {
     "build": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend",
@@ -9,5 +10,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "dependencies": {
+    "uuid": "^14.0.0"
+  }
 }
