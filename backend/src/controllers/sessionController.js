@@ -162,3 +162,46 @@ export async function endSession(req, res) {
     res.status(500).json({ message: "Internal Server Error" });
   }
 }
+
+export async function executeCode(req, res) {
+  try {
+    const { language, code } = req.body;
+
+    const LANGUAGE_CONFIG = {
+      javascript: { language: "nodejs", versionIndex: "0" },
+      python: { language: "python3", versionIndex: "3" },
+      java: { language: "java", versionIndex: "3" },
+    };
+
+    const config = LANGUAGE_CONFIG[language];
+    if (!config) {
+      return res.status(400).json({ error: `Unsupported language: ${language}` });
+    }
+
+    // The backend server makes the request, completely bypassing browser CORS
+    const response = await fetch("https://api.jdoodle.com/v1/execute", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        clientId: process.env.JDOODLE_CLIENT_ID,
+        clientSecret: process.env.JDOODLE_CLIENT_SECRET,
+        script: code,
+        language: config.language,
+        versionIndex: config.versionIndex,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || data.error) {
+      return res.status(400).json({ error: data.error || "Execution failed" });
+    }
+
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error executing code:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}

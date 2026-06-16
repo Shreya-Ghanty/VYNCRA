@@ -18,7 +18,7 @@ const __dirname = path.resolve();
 // middleware
 app.use(express.json());
 // credentials:true meaning?? => server allows a browser to include cookies on request
-app.use(cors({ origin: "https://vyncra.vercel.app", credentials: true }));
+app.use(cors({ origin: ENV.CLIENT_URL, credentials: true }));
 app.use(clerkMiddleware()); // this adds auth field to request object: req.auth()
 
 app.use("/api/inngest", serve({ client: inngest, functions }));
@@ -38,13 +38,25 @@ if (ENV.NODE_ENV === "production") {
   });
 }
 
-const startServer = async () => {
-  try {
-    await connectDB();
-    app.listen(ENV.PORT, () => console.log("Server is running on port:", ENV.PORT));
-  } catch (error) {
-    console.error("💥 Error starting the server", error);
-  }
-};
+// const startServer = async () => {
+//   try {
+//     await connectDB();
+//     app.listen(ENV.PORT, () => console.log("Server is running on port:", ENV.PORT));
+//   } catch (error) {
+//     console.error("💥 Error starting the server", error);
+//   }
+// };
 
-startServer();
+// startServer();
+// 1. Connect to the database (Required for both local and Vercel)
+connectDB().catch((error) => console.error("💥 Error connecting to DB", error));
+
+// 2. Only use app.listen if you are running locally
+if (ENV.NODE_ENV !== "production") {
+  app.listen(ENV.PORT, () => {
+    console.log("Server is running locally on port:", ENV.PORT);
+  });
+}
+
+// 3. Export the app for Vercel's Serverless Functions
+export default app;
