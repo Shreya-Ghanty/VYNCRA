@@ -7,7 +7,8 @@ import { executeCode } from "../lib/piston";
 import Navbar from "../components/Navbar";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { getDifficultyBadgeClass } from "../lib/utils";
-import { Loader2Icon, LogOutIcon, PhoneOffIcon } from "lucide-react";
+import { CopyIcon, Loader2Icon, LogOutIcon, PhoneOffIcon } from "lucide-react";
+import toast from "react-hot-toast";
 import CodeEditorPanel from "../components/CodeEditorPanel";
 import OutputPanel from "../components/OutputPanel";
 
@@ -51,7 +52,7 @@ function SessionPage() {
     if (!session || !user || loadingSession) return;
     if (isHost || isParticipant) return;
 
-    joinSessionMutation.mutate(id, { onSuccess: refetch });
+    joinSessionMutation.mutate({ id }, { onSuccess: refetch });
 
     // remove the joinSessionMutation, refetch from dependencies to avoid infinite loop
   }, [session, user, loadingSession, isHost, isParticipant, id]);
@@ -121,6 +122,24 @@ function SessionPage() {
                           Host: {session?.host?.name || "Loading..."} •{" "}
                           {session?.participant ? 2 : 1}/2 participants
                         </p>
+                        {isHost && session?.sid && (
+                          <p className="text-base-content/40 mt-1 text-sm flex items-center gap-2">
+                            <span className="font-mono font-bold tracking-wider text-primary">
+                              {session.sid}
+                            </span>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(session.sid);
+                                toast.success("Session ID copied!");
+                              }}
+                              className="btn btn-ghost btn-xs gap-1"
+                              title="Copy Session ID"
+                            >
+                              <CopyIcon className="size-3" />
+                              Copy ID
+                            </button>
+                          </p>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-3">

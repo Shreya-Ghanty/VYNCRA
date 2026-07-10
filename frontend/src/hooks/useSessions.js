@@ -36,7 +36,17 @@ export const useSessionById = (id) => {
     queryKey: ["session", id],
     queryFn: () => sessionApi.getSessionById(id),
     enabled: !!id,
-    refetchInterval: 5000, // refetch every 5 seconds to detect session status changes
+    refetchInterval: 5000,
+  });
+
+  return result;
+};
+
+export const useSessionBySid = (sid) => {
+  const result = useQuery({
+    queryKey: ["sessionBySid", sid],
+    queryFn: () => sessionApi.getSessionBySid(sid),
+    enabled: !!sid,
   });
 
   return result;
