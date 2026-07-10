@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const sessionSchema = new mongoose.Schema(
   {
+    sid: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
     problem: {
       type: String,
       required: true,

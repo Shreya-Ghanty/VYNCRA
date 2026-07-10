@@ -1,6 +1,12 @@
 import { chatClient, streamClient } from "../lib/stream.js";
 import Session from "../models/Session.js";
 
+function generateSid() {
+  const letters = () => Math.random().toString(36).substring(2, 5).toUpperCase();
+  const digits = () => String(Math.floor(Math.random() * 900) + 100);
+  return `${letters()}-${digits()}-${letters()}`;
+}
+
 export async function createSession(req, res) {
   try {
     const { problem, difficulty } = req.body;
@@ -14,8 +20,17 @@ export async function createSession(req, res) {
     // generate a unique call id for stream video
     const callId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
+    // generate a unique session ID (retry on collision)
+    let sid;
+    let isUnique = false;
+    while (!isUnique) {
+      sid = generateSid();
+      const existing = await Session.findOne({ sid });
+      if (!existing) isUnique = true;
+    }
+
     // create session in db
-    const session = await Session.create({ problem, difficulty, host: userId, callId });
+    const session = await Session.create({ sid, problem, difficulty, host: userId, callId });
 
     // create stream video call
     await streamClient.video.call("default", callId).getOrCreate({
@@ -75,6 +90,23 @@ export async function getMyRecentSessions(req, res) {
   }
 }
 
+export async function getSessionBySid(req, res) {
+  try {
+    const { sid } = req.params;
+
+    const session = await Session.findOne({ sid })
+      .populate("host", "name email profileImage clerkId")
+      .populate("participant", "name email profileImage clerkId");
+
+    if (!session) return res.status(404).json({ message: "Session not found" });
+
+    res.status(200).json({ session });
+  } catch (error) {
+    console.log("Error in getSessionBySid controller:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
 export async function getSessionById(req, res) {
   try {
     const { id } = req.params;
@@ -95,6 +127,7 @@ export async function getSessionById(req, res) {
 export async function joinSession(req, res) {
   try {
     const { id } = req.params;
+    const { sid } = req.body;
     const userId = req.user._id;
     const clerkId = req.user.clerkId;
 
@@ -110,8 +143,15 @@ export async function joinSession(req, res) {
       return res.status(400).json({ message: "Host cannot join their own session as participant" });
     }
 
-    // check if session is already full - has a participant
-    if (session.participant) return res.status(409).json({ message: "Session is full" });
+    // validate session ID code only if explicitly provided
+    if (sid && session.sid && session.sid !== sid) {
+      return res.status(403).json({ message: "Invalid session code" });
+    }
+
+    // check if session is already full - has a different participant
+    if (session.participant && session.participant.toString() !== userId.toString()) {
+      return res.status(409).json({ message: "Session is full" });
+    }
 
     session.participant = userId;
     await session.save();
